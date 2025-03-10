@@ -1,0 +1,49 @@
+{
+  "name": "matrimonial-client",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Matrimonial (Matrimony Management) client",
+  "type": "module",
+  "scripts": {
+    "clean": "node -e \"const fs=require('fs');['dist','build','.vite','tsconfig.tsbuildinfo'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}))\"",
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "^6.8.0",
+    "@stripe/stripe-js": "^9.13.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query": "^5.101.4",
+    "axios": "^1.19.0",
+    "dotenv": "^17.4.2",
+    "firebase": "^12.17.1",
+    "motion": "^13.0.0",
+    "react": "^19.2.8",
+    "react-countup": "^6.5.3",
+    "react-dom": "^19.2.8",
+    "react-icons": "^5.7.0",
+    "react-rating": "^2.0.5",
+    "react-router": "^8.3.0",
+    "sweetalert2": "^11.26.25",
+    "swiper": "^14.1.0",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.0.5",
+    "daisyui": "^5.7.16",
+    "eslint": "^9",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.9.0",
+    "vite": "^8.2.1"
+  },
+  "author": {
+    "name": "Tahmid Sarker",
+    "url": "https://tahmid-sarker.github.io"
+  }
+}
