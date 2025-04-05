@@ -1,0 +1,21 @@
+{
+  "name": "matrimonial",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Matrimonial (Matrimony Management) — client and server monorepo",
+  "author": {
+    "name": "Tahmid Sarker",
+    "url": "https://tahmid-sarker.github.io"
+  },
+  "scripts": {
+    "clean": "npm run clean --prefix client",
+    "dev": "concurrently -n server,client -c green,cyan \"npm run start --prefix server\" \"npm run dev --prefix client\"",
+    "start": "npm run dev",
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev:server": "npm run start --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
