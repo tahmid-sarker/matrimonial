@@ -9,3 +9,5 @@ node_modules/
 .vercel/
 firebase-admin-key.json
 *.pem
+.vercel
+.env*
