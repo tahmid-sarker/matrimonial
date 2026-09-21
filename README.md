@@ -1,6 +1,7 @@
 # Matrimonial (Matrimony Management)
 
-- [**View Live**](https://tahmid-sarker.github.io/matrimonial/)
+- [**Client Live (Firebase)**](https://bengal-matrimony.web.app)
+- [**API Live (Vercel)**](https://bengal-matrimony.vercel.app)
 
 Matrimonial is a modern matrimony management web application designed to help Bengali singles and families find suitable matches, manage biodata, and connect with others. The platform offers a secure, user-friendly experience for both regular users and administrators.
 
@@ -37,7 +38,7 @@ Matrimonial is a modern matrimony management web application designed to help Be
 | Backend        | Node.js, Express                    |
 | Database       | MongoDB                             |
 | Auth & Hosting | Firebase (Auth + Hosting), JWT      |
-| Deployment     | GitHub Pages (client) + Vercel (API) |
+| Deployment     | Firebase Hosting (client) + Vercel (API) |
 
 ## Routing Overview
 
