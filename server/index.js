@@ -31,16 +31,29 @@ initializeApp({
 });
 
 // Create Token (Create)
-app.post("/jwt", (req, res) => {
-  const userEmail = req.body;
-  const token = jwt.sign(userEmail, process.env.JWT_ACCESS_SECRET, {expiresIn: '10d'});
+app.post("/jwt", async (req, res) => {
+  const authHeader = req.headers.authorization || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!idToken) {
+    return res.status(401).send({ message: "Unauthorize Access" });
+  }
+  let decoded;
+  try {
+    decoded = await getAuth().verifyIdToken(idToken);
+  } catch {
+    return res.status(401).send({ message: "Unauthorize Access" });
+  }
+  if (!decoded.email) {
+    return res.status(401).send({ message: "Unauthorize Access" });
+  }
+  const token = jwt.sign({ email: decoded.email }, process.env.JWT_ACCESS_SECRET, {expiresIn: '10d'});
   res.cookie('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
     maxAge: 10 * 24 * 60 * 60 * 1000, // 10 days
   });
-  res.send({token});
+  res.send({ success: true });
 })
 
 // Verify Cookie Token:
@@ -65,8 +78,11 @@ const VerifyFirebaseToken = async(req, res, next) => {
     return res.status(401).send({message: "Unauthorize Access"})
   }
   const token = authHeader.split(" ")[1];
-  const decode = await getAuth().verifyIdToken(token)
-  req.decode = decode;
+  try {
+    req.decode = await getAuth().verifyIdToken(token);
+  } catch {
+    return res.status(401).send({message: "Unauthorize Access"})
+  }
   next();
 }
 

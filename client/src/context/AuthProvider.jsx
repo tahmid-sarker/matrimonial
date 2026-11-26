@@ -42,10 +42,11 @@ const AuthProvider = ({ children }) => {
             setLoading(false);
             setUser(currentUser);
             if (currentUser?.email) {
-                const userEmail = {email: currentUser.email}
-                axios.post(`${import.meta.env.VITE_API_URL}/jwt`, userEmail, {
+                currentUser.getIdToken()
+                .then((idToken) => axios.post(`${import.meta.env.VITE_API_URL}/jwt`, {}, {
+                    headers: { Authorization: `Bearer ${idToken}` },
                     withCredentials: true
-                })
+                }))
                 .then(response => {
                 })
                 .catch(error => {
