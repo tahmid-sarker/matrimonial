@@ -26,7 +26,7 @@ const UpdateProfile = () => {
     const { mutate: updateInfo } = useMutation({
         mutationFn: async ({ email, name, photo }) => {
             await updateUser(name, photo);
-            const response = await axiosSecure.patch('http://localhost:3000/dashboard/update-profile', { email, name, photo }, {
+            const response = await axiosSecure.patch('/dashboard/update-profile', { email, name, photo }, {
                 headers: { "Content-Type": "application/json" },
                 withCredentials: true
             });

@@ -7,7 +7,6 @@ const useAxiosSecure = () => {
     // Create an Axios instance with a base URL
     const axiosInstance = axios.create({
         baseURL: `${import.meta.env.VITE_API_URL}`,
-        // baseURL: 'http://localhost:3000',
         withCredentials: true
     })
 
