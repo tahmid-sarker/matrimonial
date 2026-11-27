@@ -106,6 +106,24 @@ const premiumRequests = client.db("premiumDB").collection("requests");
 const paymentCollection = client.db("paymentDB").collection("payments");
 const messageCollection = client.db("messageDB").collection("messages");
 
+async function verifyAdmin(req, res, next) {
+  const email = req.decode?.email;
+  const me = email ? await userCollection.findOne({ email }) : null;
+  if (me?.role !== "admin") {
+    return res.status(403).send({ message: "Forbidden Access" });
+  }
+  req.currentUser = me;
+  next();
+}
+
+async function listUsersForRequester(req, res) {
+  const me = await userCollection.findOne({ email: req.decode?.email });
+  if (me?.role === "admin") {
+    return res.send(await userCollection.find().toArray());
+  }
+  res.send(me ? [me] : []);
+}
+
 // USER PART:
 // Create a User (Create)
 app.post("/users", VerifyFirebaseToken, async (req, res) => {
@@ -119,14 +137,15 @@ app.post("/users", VerifyFirebaseToken, async (req, res) => {
 });
 
 // Get all Users (Read)
-app.get("/users", VerifyJWTToken, async (req, res) => {
-  const result = await userCollection.find().toArray();
-  res.send(result);
-});
+app.get("/users", VerifyJWTToken, listUsersForRequester);
 
 // Get single User by Email (Read)
 app.get("/user", VerifyJWTToken, async (req, res) => {
   const email = req.query.email;
+  if (email !== req.decode?.email) {
+    const me = await userCollection.findOne({ email: req.decode?.email });
+    if (me?.role !== "admin") return res.status(403).send({ message: "Forbidden Access" });
+  }
   const filter = { email: email };
   const result = await userCollection.findOne(filter);
   res.send(result);
@@ -257,13 +276,13 @@ app.post('/contact-message', async (req, res) => {
 });
 
 // Get all contact messages (Read)
-app.get('/contact-messages', VerifyJWTToken, async (req, res) => {
+app.get('/contact-messages', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const result = await messageCollection.find().sort({ date: -1 }).toArray();
   res.send(result);
 });
 
 // Delete a contact message (Delete)
-app.delete('/contact-messages/:id', VerifyJWTToken, async (req, res) => {
+app.delete('/contact-messages/:id', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const id = req.params.id;
   const result = await messageCollection.deleteOne({ _id: new ObjectId(id) });
   res.send(result);
@@ -357,14 +376,14 @@ app.get('/users', VerifyJWTToken, async (req, res) => {
 });
 
 // Delete a Biodata by ID (Delete)
-app.delete('/biodata/:id', VerifyJWTToken, async (req, res) => {
+app.delete('/biodata/:id', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const id = parseInt(req.params.id);
   const result = await biodataCollection.deleteOne({ biodataId: id });
   res.send(result);
 });
 
 // Make Admin or Remove Admin (Update)
-app.patch('/users/admin/:id', VerifyJWTToken, async (req, res) => {
+app.patch('/users/admin/:id', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const id = req.params.id;
   const { role } = req.body; // either "admin" or "user"
   const result = await userCollection.updateOne(
@@ -375,7 +394,7 @@ app.patch('/users/admin/:id', VerifyJWTToken, async (req, res) => {
 });
 
 // Toggle Premium Status (Update)
-app.patch('/users/premium/:id', VerifyJWTToken, async (req, res) => {
+app.patch('/users/premium/:id', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const id = req.params.id;
   const { premium } = req.body; // true or false
   const result = await userCollection.updateOne(
@@ -386,14 +405,14 @@ app.patch('/users/premium/:id', VerifyJWTToken, async (req, res) => {
 });
 
 // Remove User (Delete)
-app.delete('/users/:id', VerifyJWTToken, async (req, res) => {
+app.delete('/users/:id', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const id = req.params.id;
   const result = await userCollection.deleteOne({ _id: new ObjectId(id) });
   res.send(result);
 });
 
 // Delete Success Story (Delete)
-app.delete("/stories/:id", VerifyJWTToken, async (req, res) => {
+app.delete("/stories/:id", VerifyJWTToken, verifyAdmin, async (req, res) => {
   const id = req.params.id;
   const result = await marriageCollection.deleteOne({ _id: new ObjectId(id) });
   res.send(result);
@@ -402,6 +421,17 @@ app.delete("/stories/:id", VerifyJWTToken, async (req, res) => {
 // Get all premium requests (Read)
 app.get('/premium-requests', VerifyJWTToken, async (req, res) => {
   try {
+    const me = await userCollection.findOne({ email: req.decode?.email });
+    const isAdmin = me?.role === "admin";
+    if (req.query.email) {
+      if (!isAdmin && req.query.email !== req.decode?.email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+      return res.send(await premiumRequests.findOne({ email: req.query.email }));
+    }
+    if (!isAdmin) {
+      return res.status(403).send({ message: "Forbidden Access" });
+    }
     const requests = await premiumRequests.find().toArray();
     res.json(requests);
   } catch (err) {
@@ -418,7 +448,7 @@ app.get('/premium-requests', VerifyJWTToken, async (req, res) => {
 });
 
 // Update status (approve/remove approve) of a premium request (Update)
-app.patch('/premium-requests/:id', VerifyJWTToken, async (req, res) => {
+app.patch('/premium-requests/:id', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const id = req.params.id;
   const { status } = req.body; // "approved" or "pending"
   if (!['approved', 'pending'].includes(status)) {
@@ -436,7 +466,7 @@ app.patch('/premium-requests/:id', VerifyJWTToken, async (req, res) => {
 });
 
 // Update user premium status based on request approval (Update)
-app.patch('/users/email/:email', VerifyJWTToken, async (req, res) => {
+app.patch('/users/email/:email', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const email = req.params.email; // this will be decoded automatically by Express
   const { premium } = req.body;
   try {
@@ -452,7 +482,7 @@ app.patch('/users/email/:email', VerifyJWTToken, async (req, res) => {
 });
 
 // Delete a premium request (Delete)
-app.delete('/premium-requests/:id', VerifyJWTToken, async (req, res) => {
+app.delete('/premium-requests/:id', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const id = req.params.id;
   try {
     const result = await premiumRequests.deleteOne({ _id: new ObjectId(id) });
@@ -463,7 +493,7 @@ app.delete('/premium-requests/:id', VerifyJWTToken, async (req, res) => {
 });
 
 // Get all payment records (Read)
-app.get('/all-payments', VerifyJWTToken, async (req, res) => {
+app.get('/all-payments', VerifyJWTToken, verifyAdmin, async (req, res) => {
   const result = await paymentCollection.find().sort({ date: -1 }).toArray();
   res.send(result);
 });
